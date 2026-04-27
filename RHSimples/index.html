@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Desempenho RH</title>
+    <!-- Carregamento do Tailwind CSS para Estilo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carregamento do Chart.js para Gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <!-- Fonte Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <!-- Folha de estilos externa -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="p-4 sm:p-8">
+
+    <div id="app" class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard de Desempenho RH</h1>
+
+        <!-- Controles de Navegação (Abas) -->
+        <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
+            <button id="tab-dashboard" class="tab-button active py-2 px-4 text-gray-600 hover:text-gray-800 whitespace-nowrap">Visão Geral</button>
+            <button id="tab-add-employee" class="tab-button py-2 px-4 text-gray-600 hover:text-gray-800 whitespace-nowrap">Gerenciar Colaboradores</button>
+            <button id="tab-tasks" class="tab-button py-2 px-4 text-gray-600 hover:text-gray-800 whitespace-nowrap">Gestão de Tarefas</button>
+            <button id="tab-timesheet" class="tab-button py-2 px-4 text-gray-600 hover:text-gray-800 whitespace-nowrap">Folha de Ponto</button>
+            <button id="tab-pdi" class="tab-button py-2 px-4 text-gray-600 hover:text-gray-800 whitespace-nowrap">PDI/Treinamento</button>
+            <button id="tab-evaluations" class="tab-button py-2 px-4 text-gray-600 hover:text-gray-800 whitespace-nowrap">Avaliações</button>
+        </div>
+
+        <!-- Conteúdo do Dashboard (Padrão) -->
+        <div id="dashboard-content">
+            <!-- KPIs (Métricas Chave) -->
+            <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+                <!-- KPIs serão preenchidos via JS -->
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Coluna 1: Detalhes do Funcionário (Sidebar) -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Detalhes do Funcionário Selecionado -->
+                    <div class="bg-white p-6 rounded-xl card h-full">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Detalhes do Colaborador</h2>
+                        <div id="employee-details" class="text-center">
+                            <p class="text-gray-500">Selecione um funcionário na lista ao lado.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna 2 e 3: Gráficos de Desempenho e Demográficos -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Gráficos de Competências Individuais -->
+                    <div id="competency-charts" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Gráfico de Radar -->
+                        <div class="bg-white p-6 rounded-xl card">
+                            <h3 class="text-lg font-semibold mb-4">Radar de Competências (0-5)</h3>
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                        <!-- Gráfico de Barras de Competências -->
+                        <div class="bg-white p-6 rounded-xl card">
+                            <h3 class="text-lg font-semibold mb-4">Notas por Competência (0-5)</h3>
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                     
+                    <!-- Gráficos Demográficos -->
+                    <div id="demographic-charts" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Gênero -->
+                        <div class="bg-white p-6 rounded-xl card">
+                            <h3 class="text-lg font-semibold mb-4">Funcionários por Gênero</h3>
+                            <canvas id="genderChart"></canvas>
+                        </div>
+                        <!-- Tempo de Empresa -->
+                        <div class="bg-white p-6 rounded-xl card">
+                            <h3 class="text-lg font-semibold mb-4">Tempo de Empresa</h3>
+                            <canvas id="tenureChart"></canvas>
+                        </div>
+                        <!-- Contratações/Desligamentos por Ano -->
+                        <div class="bg-white p-6 rounded-xl card md:col-span-1">
+                            <h3 class="text-lg font-semibold mb-4">Movimentação Anual</h3>
+                            <canvas id="hiringFiringChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             
+            <!-- GRÁFICOS: QI E PERFIL COMPORTAMENTAL -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                 <div class="bg-white p-6 rounded-xl card">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Comparativo de QI por Colaborador</h2>
+                    <canvas id="qiComparisonChart"></canvas>
+                </div>
+                 <div class="bg-white p-6 rounded-xl card">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Distribuição de Perfil Comportamental</h2>
+                    <canvas id="behavioralProfileChart"></canvas>
+                </div>
+            </div>
+             
+            <!-- NOVOS GRÁFICOS DE DEPARTAMENTO -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                 <div class="bg-white p-6 rounded-xl card">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Avaliação Média por Departamento</h2>
+                    <canvas id="departmentAvgScoreChart"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-xl card">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">PDI Score Médio por Departamento</h2>
+                    <canvas id="departmentPdiChart"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-xl card">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Funcionários por Departamento</h2>
+                    <canvas id="employeesByDeptChart"></canvas>
+                </div>
+            </div>
+
+            <!-- GRÁFICO: QI MÉDIO POR DEPARTAMENTO -->
+            <div class="mt-8 bg-white p-6 rounded-xl card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">QI Médio por Departamento</h2>
+                <canvas id="qiByDepartmentChart"></canvas>
+            </div>
+
+            <!-- Salário Médio Mensal por Departamento -->
+            <div class="mt-8 bg-white p-6 rounded-xl card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Salário Médio Mensal por Departamento</h2>
+                <canvas id="departmentSalaryChart"></canvas>
+            </div>
+
+            <!-- Lista de Funcionários -->
+            <div class="mt-8 bg-white p-6 rounded-xl card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Lista de Colaboradores Ativos</h2>
+                <div id="employee-list-container" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome Completo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área/Departamento</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cargo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">QI</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avaliação Média (0-10)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employee-list-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Linhas preenchidas via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo Adicionar / Remover Colaborador -->
+        <div id="add-employee-content" class="hidden bg-white p-6 rounded-xl card">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Adicionar Novo Colaborador</h2>
+            <form id="add-employee-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 
+                <!-- Informações Pessoais e Contrato -->
+                <div class="space-y-4 md:col-span-2 border-b pb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">Dados Pessoais e Contrato</h3>
+                    <div>
+                        <label for="nomeCompleto" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                        <input type="text" id="nomeCompleto" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento</label>
+                            <select id="departamento" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-white">
+                                <!-- Opções preenchidas via JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="cargo" class="block text-sm font-medium text-gray-700">Cargo</label>
+                            <select id="cargo" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-white">
+                                <!-- Opções preenchidas via JS -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <!-- Salário Mensal -->
+                            <label for="salario" class="block text-sm font-medium text-gray-700">Salário (R$ Mensal)</label>
+                            <input type="number" id="salario" required min="0" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        </div>
+                        <div>
+                            <label for="dataContratacao" class="block text-sm font-medium text-gray-700">Data de Contratação (DD/MM/AAAA)</label>
+                            <input type="text" id="dataContratacao" required  
+                                pattern="\d{2}/\d{2}/\d{4}"  
+                                placeholder="Ex: 31/12/2024" 
+                                title="Formato exigido: DD/MM/AAAA (Ex: 01/01/2023)" 
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        </div>
+                        <div>
+                            <label for="genero" class="block text-sm font-medium text-gray-700">Gênero</label>
+                            <select id="genero" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-white">
+                                <option value="Masculino">Masculino</option>
+                                <option value="Feminino">Feminino</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Avaliação de Competências (Notas de 0 a 10) -->
+                <div class="space-y-4 md:col-span-2 border-b pb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">Avaliação de Competências (Nota 0-10)</h3>
+                     
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="comunicacao" class="block text-sm font-medium text-gray-700">Comunicação (0-10)</label>
+                            <input type="number" id="comunicacao" required min="0" max="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        </div>
+                        <div>
+                            <label for="iniciativa" class="block text-sm font-medium text-gray-700">Iniciativa (0-10)</label>
+                            <input type="number" id="iniciativa" required min="0" max="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        </div>
+                        <div>
+                            <label for="lideranca" class="block text-sm font-medium text-gray-700">Liderança (0-10)</label>
+                            <input type="number" id="lideranca" required min="0" max="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        </div>
+                        <div>
+                            <label for="trabalhoEmEquipe" class="block text-sm font-medium text-gray-700">Trabalho em Equipe (0-10)</label>
+                            <input type="number" id="trabalhoEmEquipe" required min="0" max="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        </div>
+                         
+                        <!-- NOVO CAMPO: Organização (0-10) -->
+                        <div>
+                            <label for="organizacao" class="block text-sm font-medium text-gray-700">Organização (0-10)</label>
+                            <input type="number" id="organizacao" required min="0" max="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        </div>
+
+                        <!-- Campo especial para Frequência (Razão) -->
+                        <div class="col-span-2">
+                            <label for="frequenciaRatio" class="block text-sm font-medium text-gray-700">Frequência (Razão)</label>
+                            <p class="text-xs text-gray-500 mb-1">Insira a Razão de Frequência (Ex: 0.8 para 80% de horas)</p>
+                            <input type="number" id="frequenciaRatio" required min="0" max="1" step="0.01" placeholder="Ex: 0.8" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarefas Concluídas -->
+                <div class="space-y-4 md:col-span-2 border-b pb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">Desempenho por Tarefas</h3>
+                    <div>
+                        <label for="tarefasConcluidas" class="block text-sm font-medium text-gray-700">Tarefas Concluídas (0 a 10)</label>
+                        <p class="text-xs text-gray-500 mb-1">Nota de 0 a 10, ganhando +1 ponto a cada 10 tarefas concluídas.</p>
+                        <input type="number" id="tarefasConcluidas" required min="0" max="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                    </div>
+                </div>
+
+                <!-- Botão de Envio -->
+                <div class="md:col-span-2">
+                    <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md">
+                        Adicionar Colaborador
+                    </button>
+                </div>
+            </form>
+
+            <!-- Seção para Remover Colaborador -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <h2 class="text-2xl font-bold text-red-600 mb-6">Remover Colaborador</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                    <div>
+                        <label for="remove-employee-select" class="block text-sm font-medium text-gray-700">Selecione o Colaborador</label>
+                        <select id="remove-employee-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-white"></select>
+                    </div>
+                    <div>
+                        <button type="button" id="btn-remove-employee" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md">
+                            Remover Definitivamente
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="form-message" class="mt-4 p-3 rounded-lg hidden"></div>
+        </div>
+
+        <!-- Conteúdo Gestão de Tarefas (NOVO) -->
+        <div id="tasks-content" class="hidden">
+            <div class="bg-white p-6 rounded-xl card space-y-8">
+                <h2 class="text-2xl font-bold text-gray-800 border-b pb-4">Gestão de Tarefas</h2>
+
+                <!-- Formulário para Adicionar Tarefa -->
+                <form id="add-task-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end p-4 border rounded-lg bg-gray-50">
+                    <div>
+                        <label for="taskName" class="block text-sm font-medium text-gray-700">Nome da Tarefa</label>
+                        <input type="text" id="taskName" required class="mt-1 block w-full p-2 border rounded-md" placeholder="Ex: Relatório Mensal">
+                    </div>
+                    <div>
+                        <label for="taskStatus" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="taskStatus" class="mt-1 block w-full p-2 border rounded-md bg-white">
+                            <option value="A Fazer">A Fazer</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Concluído">Concluído</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2 grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="taskEmployees" class="block text-sm font-medium text-gray-700">Encarregados</label>
+                            <select id="taskEmployees" multiple required class="mt-1 block w-full p-2 border rounded-md bg-white h-24"></select>
+                        </div>
+                        <div>
+                            <label for="taskDueDate" class="block text-sm font-medium text-gray-700">Prazo de Entrega</label>
+                            <input type="text" id="taskDueDate" required class="mt-1 block w-full p-2 border rounded-md" placeholder="Ex: 08/10/2025">
+                        </div>
+                    </div>
+                    <div class="md:col-span-4">
+                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md">
+                            Adicionar Tarefa
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Gráficos de Tarefas -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 border-t">
+                    <div class="bg-white p-4 rounded-xl card">
+                        <h3 class="text-lg font-semibold mb-4 text-center">Tarefas por Funcionário</h3>
+                        <canvas id="assignedTasksChart"></canvas>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl card">
+                        <h3 class="text-lg font-semibold mb-4 text-center">Tarefas Concluídas</h3>
+                        <canvas id="completedTasksChart"></canvas>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl card">
+                        <h3 class="text-lg font-semibold mb-4 text-center">Tarefas em Andamento</h3>
+                        <canvas id="inProgressTasksChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Lista de Tarefas -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Lista de Tarefas</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridade</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarefa</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Encarregados</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prazo</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="task-list-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Tarefas serão inseridas aqui via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo Folha de Ponto -->
+        <div id="timesheet-content" class="hidden">
+            <div class="bg-white p-6 rounded-xl card space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800 border-b pb-4">Registro de Ponto</h2>
+
+                <!-- Seleção do Usuário e Estado do Ponto -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    <div>
+                        <label for="timesheet-employee-select" class="block text-sm font-medium text-gray-700">Selecione o Colaborador</label>
+                        <select id="timesheet-employee-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-white"></select>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-sm font-medium text-gray-500">Status Atual do Ponto:</p>
+                        <p id="timesheet-status" class="text-xl font-bold text-gray-600">Carregando...</p>
+                        <p id="timesheet-last-punch" class="text-xs text-gray-400 mt-1"></p>
+                    </div>
+
+                    <div>
+                        <button id="punch-button" disabled class="w-full py-3 px-4 rounded-lg text-white font-bold transition duration-200 shadow-lg bg-gray-400 hover:bg-gray-500 disabled:opacity-50">
+                            Carregando...
+                        </button>
+                    </div>
+                </div>
+                <!-- Histórico de Ponto do Dia -->
+                <h3 class="text-xl font-semibold text-gray-700 pt-4 border-t">Histórico do Dia (<span id="current-timesheet-date"></span>)</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horário</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timesheet-history-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Histórico de Ponto do Dia -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Total de Horas Trabalhadas e Porcentagem -->
+                <div class="text-right p-4 bg-emerald-50 rounded-lg flex flex-col sm:flex-row justify-between items-end sm:items-center">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Meta Diária (8h)</p>
+                        <p class="text-xl font-bold text-emerald-800">Progresso do Dia: <span id="progress-percentage" class="font-bold">0%</span></p>
+                    </div>
+                    <div class="mt-2 sm:mt-0">
+                        <p class="text-lg font-semibold text-emerald-800">Total de Horas Registradas: <span id="total-hours-worked" class="font-bold">0h 0m</span></p>
+                    </div>
+                </div>
+
+                <!-- Metas Agregadas (Semanal, Mensal, Anual) -->
+                <h3 class="text-xl font-semibold text-gray-700 pt-4 border-t mt-6">Metas de Frequência de Jornada</h3>
+                <div id="aggregated-goals-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Cards de metas serão preenchidos via JS -->
+                </div>
+
+                <div id="firestore-status" class="text-sm text-center text-gray-500 mt-4">Aguardando conexão com o Firebase...</div>
+            </div>
+        </div>
+        
+        <!-- Conteúdo PDI/Treinamento -->
+        <div id="pdi-content" class="hidden">
+            <div class="bg-white p-6 rounded-xl card space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800 border-b pb-4">Plano de Desenvolvimento Individual (PDI)</h2>
+
+                <!-- SELEÇÃO DE COLABORADOR E FORMULÁRIO -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 border-b pb-4">
+                    <div class="lg:col-span-1">
+                        <label for="pdi-employee-select" class="block text-sm font-medium text-gray-700">Colaborador para Registro</label>
+                        <select id="pdi-employee-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-white"></select>
+                        <div class="mt-2 p-2 bg-indigo-50 rounded-lg text-sm text-indigo-800">
+                            PDI Score (Média de Treinamento): <span id="pdi-score-display" class="font-bold">N/A</span>
+                        </div>
+                    </div>
+
+                    <form id="add-training-form" class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                        <div class="sm:col-span-2">
+                            <label for="trainingName" class="block text-sm font-medium text-gray-700">Nome do Treinamento/PDI</label>
+                            <input type="text" id="trainingName" required placeholder="Ex: Curso de Python Básico" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        </div>
+                        <div>
+                            <label for="trainingScore" class="block text-sm font-medium text-gray-700">Nota (0-10)</label>
+                            <input type="number" id="trainingScore" required min="0" max="10" step="0.1" placeholder="Ex: 8.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md">
+                                Registrar Treinamento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- GRÁFICOS DE PDI -->
+                <h3 class="text-xl font-semibold text-gray-700 pt-4 border-t">Análise de Treinamento</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Gráfico 1: Comparação PDI Score entre funcionários -->
+                    <div class="bg-white p-6 rounded-xl card">
+                        <h4 class="text-lg font-semibold mb-4">Comparativo de PDI Score (Média de Treinamento)</h4>
+                        <canvas id="pdiScoreBarChart"></canvas>
+                    </div>
+                    <!-- Gráfico 2: Radar de Notas de Treinamento (Funcionário Selecionado) -->
+                    <div class="bg-white p-6 rounded-xl card">
+                        <h4 class="text-lg font-semibold mb-4">Radar de Notas de Treinamento (0-10)</h4>
+                        <canvas id="trainingRadarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- HISTÓRICO DE TREINAMENTOS -->
+                <h3 class="text-xl font-semibold text-gray-700 pt-4 border-t">Histórico de Treinamentos de <span id="pdi-employee-name" class="font-bold">...</span></h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Treinamento/PDI</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nota Final (0-10)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pdi-history-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Histórico de Treinamentos -->
+                        </tbody>
+                    </table>
+                    <div id="pdi-history-empty" class="text-center py-4 text-gray-500 hidden">Nenhum treinamento registrado.</div>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Conteúdo Avaliações -->
+        <div id="evaluations-content" class="hidden">
+            <div class="bg-white p-6 rounded-xl card space-y-8">
+                <h2 class="text-2xl font-bold text-gray-800 border-b pb-4">Avaliações Psicológicas e Comportamentais</h2>
+
+                 <!-- SELEÇÃO DE COLABORADOR -->
+                <div>
+                    <label for="evaluation-employee-select" class="block text-sm font-medium text-gray-700">Selecione o Colaborador</label>
+                    <select id="evaluation-employee-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-white"></select>
+                </div>
+                
+                <!-- FORMULÁRIO DE AVALIAÇÕES -->
+                <form id="evaluation-form">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Registrar Avaliações</h3>
+                    <div id="evaluation-fields-container" class="space-y-6 max-h-[60vh] overflow-y-auto pr-4">
+                        <!-- Campos do formulário serão gerados dinamicamente aqui -->
+                    </div>
+                    <div class="pt-6 border-t mt-6">
+                        <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md">
+                            Salvar Avaliações
+                        </button>
+                    </div>
+                </form>
+
+                <!-- GRÁFICOS DE AVALIAÇÕES -->
+                <div class="pt-8 border-t">
+                    <h3 class="text-xl font-semibold text-gray-700">Análise de Avaliações</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div class="bg-white p-6 rounded-xl card">
+                            <h4 class="text-lg font-semibold mb-4">Diagnósticos por Colaborador</h4>
+                            <canvas id="evaluationComparisonPieChart"></canvas>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl card">
+                            <h4 class="text-lg font-semibold mb-4">Perfil de Avaliações Realizadas</h4>
+                            <canvas id="evaluationRadarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RELATÓRIO INDIVIDUAL -->
+                <div id="evaluation-report-container" class="pt-8 border-t space-y-4">
+                     <!-- Relatório gerado dinamicamente -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- Referência ao script extraído (como type="module") -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
